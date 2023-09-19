@@ -4,7 +4,7 @@ from .views import (CustomUserRegistration, UserLogin,
                     PreferenceDetailView, UserLikeAPIView,UploadedImagesListCreateView,
                     SubscriptionAPIView,UserLoginWithEmail,CommunityList, CommunityDetail
                     ,ReligionList,ReligionDetail,ReligionByCommunity,StateList,StateDetail,
-                    DistrictList,DistrictDetail,DistrictsByState)
+                    DistrictList,DistrictDetail,DistrictsByState,CheckEmailExists)
 
 
 
@@ -29,6 +29,6 @@ urlpatterns = [
     path('states/<int:pk>/', StateDetail.as_view(), name='state-detail'),
     path('districts/', DistrictList.as_view(), name='district-list'),
     path('districts/<int:pk>/', DistrictDetail.as_view(), name='district-detail'),
-    path('districts/<str:state_name>/', DistrictsByState.as_view(), name='districts-by-state')
-
+    path('districts/<str:state_name>/', DistrictsByState.as_view(), name='districts-by-state'),
+    path('forget-password/', CheckEmailExists.as_view(), name='check-email-exists'),
 ]

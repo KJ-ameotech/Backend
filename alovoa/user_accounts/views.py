@@ -460,3 +460,22 @@ class DistrictsByState(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         except State.DoesNotExist:
             return Response({'detail': 'State not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class CheckEmailExists(APIView):
+    def post(self, request):
+        email = request.data.get('email')
+        new_password = request.data.get('new_password')
+
+        # Check if the email exists in the database
+        User = CustomUser
+        try:
+            user = User.objects.get(email=email)
+
+            # Update the user's password
+            user.set_password(new_password)
+            user.save()
+
+            return Response({'message': 'Password updated successfully'}, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({'exists': False}, status=status.HTTP_404_NOT_FOUND)
