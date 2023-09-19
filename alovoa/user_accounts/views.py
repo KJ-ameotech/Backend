@@ -10,10 +10,12 @@ from rest_framework import serializers
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import Profile,Preference, UserLike, UploadedImages,Religion, Subscription,CustomUser, Community
+from .models import Profile,Preference, UserLike, UploadedImages,Religion, Subscription,CustomUser, Community,State,District
 from .serializers import (CustomUserSerializer, ProfileSerializer,
                           PreferenceSerializer, UserLikeSerializer,
-                          UploadedImagesSerializer, SubscriptionSerializer, CommunitySerializer,ReligionSerializer)
+                          UploadedImagesSerializer, SubscriptionSerializer,
+                          CommunitySerializer,ReligionSerializer,StateSerializer,
+                          DistrictSerializer)
 import cv2
 from django.views.decorators.csrf import csrf_exempt
 class CustomUserRegistration(APIView):
@@ -354,3 +356,107 @@ class ReligionByCommunity(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Community.DoesNotExist:
             return Response({'detail': 'Community not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class StateList(APIView):
+    def get(self, request):
+        states = State.objects.all()
+        serializer = StateSerializer(states, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = StateSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class StateDetail(APIView):
+    def get_object(self, pk):
+        try:
+            return State.objects.get(pk=pk)
+        except State.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        state = self.get_object(pk)
+        if state is not None:
+            serializer = StateSerializer(state)
+            return Response(serializer.data)
+        return Response({'detail': 'State not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    def put(self, request, pk):
+        state = self.get_object(pk)
+        if state is not None:
+            serializer = StateSerializer(state, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'detail': 'State not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    def delete(self, request, pk):
+        state = self.get_object(pk)
+        if state is not None:
+            state.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response({'detail': 'State not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class DistrictList(APIView):
+    def get(self, request):
+        districts = District.objects.all()
+        serializer = DistrictSerializer(districts, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = DistrictSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class DistrictDetail(APIView):
+    def get_object(self, pk):
+        try:
+            return District.objects.get(pk=pk)
+        except District.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        district = self.get_object(pk)
+        if district is not None:
+            serializer = DistrictSerializer(district)
+            return Response(serializer.data)
+        return Response({'detail': 'District not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    def put(self, request, pk):
+        district = self.get_object(pk)
+        if district is not None:
+            serializer = DistrictSerializer(district, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'detail': 'District not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    def delete(self, request, pk):
+        district = self.get_object(pk)
+        if district is not None:
+            district.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response({'detail': 'District not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class DistrictsByState(APIView):
+    def get(self, request, state_name):
+        try:
+            # Perform a lookup by state name
+            state = State.objects.get(name=state_name)
+
+            # Filter districts by the retrieved state
+            districts = District.objects.filter(state=state)
+            serializer = DistrictSerializer(districts, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except State.DoesNotExist:
+            return Response({'detail': 'State not found'}, status=status.HTTP_404_NOT_FOUND)

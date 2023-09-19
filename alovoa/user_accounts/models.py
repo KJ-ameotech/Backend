@@ -101,3 +101,20 @@ class Religion(models.Model):
 
 
 
+class State(models.Model):
+    name = models.CharField(max_length=100)
+    abbreviation = models.CharField(max_length=2, null=True, blank=True)
+
+    def __str__(self):
+        return self.name
+
+
+class District(models.Model):
+    name = models.CharField(max_length=100)
+    state = models.ForeignKey('State', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
+
+
+

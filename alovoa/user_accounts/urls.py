@@ -3,7 +3,9 @@ from .views import (CustomUserRegistration, UserLogin,
                     ProfileListCreateView, ProfileDetailView,PreferenceListCreateView,
                     PreferenceDetailView, UserLikeAPIView,UploadedImagesListCreateView,
                     SubscriptionAPIView,UserLoginWithEmail,CommunityList, CommunityDetail
-                    ,ReligionList,ReligionDetail,ReligionByCommunity)
+                    ,ReligionList,ReligionDetail,ReligionByCommunity,StateList,StateDetail,
+                    DistrictList,DistrictDetail,DistrictsByState)
+
 
 
 
@@ -23,4 +25,10 @@ urlpatterns = [
     path('religions/', ReligionList.as_view(), name='religion-list'),
     path('religions/<int:pk>/', ReligionDetail.as_view(), name='religion-detail'),
     path('community/<str:community_name>/religions/', ReligionByCommunity.as_view(), name='religions-by-community'),
+    path('states/', StateList.as_view(), name='state-list'),
+    path('states/<int:pk>/', StateDetail.as_view(), name='state-detail'),
+    path('districts/', DistrictList.as_view(), name='district-list'),
+    path('districts/<int:pk>/', DistrictDetail.as_view(), name='district-detail'),
+    path('districts/<str:state_name>/', DistrictsByState.as_view(), name='districts-by-state')
+
 ]
