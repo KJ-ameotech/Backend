@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.core.validators import MinLengthValidator,MaxLengthValidator, MaxValueValidator, MinValueValidator, validate_email
-from .models import CustomUser, Profile, Preference, Image, UserLike, UploadedImages,Subscription
+from .models import (CustomUser, Profile, Preference,
+                     Religion, UserLike, UploadedImages,Subscription,Community)
 
 
 
@@ -99,4 +100,18 @@ class PreferenceSerializer(serializers.ModelSerializer):
 class SubscriptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subscription
+        fields = '__all__'
+
+
+
+
+class CommunitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Community
+        fields = '__all__'
+
+
+class ReligionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Religion
         fields = '__all__'

@@ -79,3 +79,25 @@ class Preference(models.Model):
 
     def __str__(self):
         return self.user.username
+
+
+
+class Community(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField(null=True, blank=True)
+
+    def __str__(self):
+        return self.name
+
+
+class Religion(models.Model):
+    community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    description = models.TextField(null=True, blank=True)
+
+
+    def __str__(self):
+        return self.name
+
+
+

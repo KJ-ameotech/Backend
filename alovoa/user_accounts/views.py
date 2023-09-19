@@ -10,8 +10,10 @@ from rest_framework import serializers
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import Profile,Preference, UserLike, UploadedImages, Subscription,CustomUser
-from .serializers import CustomUserSerializer, ProfileSerializer, PreferenceSerializer, UserLikeSerializer, UploadedImagesSerializer, SubscriptionSerializer
+from .models import Profile,Preference, UserLike, UploadedImages,Religion, Subscription,CustomUser, Community
+from .serializers import (CustomUserSerializer, ProfileSerializer,
+                          PreferenceSerializer, UserLikeSerializer,
+                          UploadedImagesSerializer, SubscriptionSerializer, CommunitySerializer,ReligionSerializer)
 import cv2
 from django.views.decorators.csrf import csrf_exempt
 class CustomUserRegistration(APIView):
@@ -248,3 +250,107 @@ class SubscriptionAPIView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CommunityList(APIView):
+    def get(self, request):
+        communities = Community.objects.all()
+        serializer = CommunitySerializer(communities, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = CommunitySerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class CommunityDetail(APIView):
+    def get_object(self, pk):
+        try:
+            return Community.objects.get(pk=pk)
+        except Community.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        community = self.get_object(pk)
+        if community is not None:
+            serializer = CommunitySerializer(community)
+            return Response(serializer.data)
+        return Response({'detail': 'Community not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    def put(self, request, pk):
+        community = self.get_object(pk)
+        if community is not None:
+            serializer = CommunitySerializer(community, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'detail': 'Community not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    def delete(self, request, pk):
+        community = self.get_object(pk)
+        if community is not None:
+            community.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response({'detail': 'Community not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+
+class ReligionList(APIView):
+    def get(self, request):
+        religions = Religion.objects.all()
+        serializer = ReligionSerializer(religions, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = ReligionSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ReligionDetail(APIView):
+    def get_object(self, pk):
+        try:
+            return Religion.objects.get(pk=pk)
+        except Religion.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        religion = self.get_object(pk)
+        if religion is not None:
+            serializer = ReligionSerializer(religion)
+            return Response(serializer.data)
+        return Response({'detail': 'Religion not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    def put(self, request, pk):
+        religion = self.get_object(pk)
+        if religion is not None:
+            serializer = ReligionSerializer(religion, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'detail': 'Religion not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    def delete(self, request, pk):
+        religion = self.get_object(pk)
+        if religion is not None:
+            religion.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response({'detail': 'Religion not found'}, status=status.HTTP_404_NOT_FOUND)
+
+class ReligionByCommunity(APIView):
+    def get(self, request, community_name):
+        try:
+            # Filter religions by community's name
+            community = Community.objects.get(name=community_name)
+            religions = Religion.objects.filter(community=community)
+            serializer = ReligionSerializer(religions, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Community.DoesNotExist:
+            return Response({'detail': 'Community not found'}, status=status.HTTP_404_NOT_FOUND)
