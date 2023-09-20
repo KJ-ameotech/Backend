@@ -81,8 +81,7 @@ class Preference(models.Model):
         return self.user.username
 
 
-
-class Community(models.Model):
+class Religion(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
 
@@ -90,8 +89,8 @@ class Community(models.Model):
         return self.name
 
 
-class Religion(models.Model):
-    community = models.ForeignKey(Community, on_delete=models.CASCADE)
+class Community(models.Model):
+    religion = models.ForeignKey(Religion, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
 

@@ -3,7 +3,7 @@ from .views import (CustomUserRegistration, UserLogin,
                     ProfileListCreateView, ProfileDetailView,PreferenceListCreateView,
                     PreferenceDetailView, UserLikeAPIView,UploadedImagesListCreateView,
                     SubscriptionAPIView,UserLoginWithEmail,CommunityList, CommunityDetail
-                    ,ReligionList,ReligionDetail,ReligionByCommunity,StateList,StateDetail,
+                    ,ReligionList,ReligionDetail,CommunityByReligionBy,StateList,StateDetail,
                     DistrictList,DistrictDetail,DistrictsByState,CheckEmailExists)
 
 
@@ -24,7 +24,7 @@ urlpatterns = [
     path('communities/<int:pk>/', CommunityDetail.as_view(), name='community-detail'),
     path('religions/', ReligionList.as_view(), name='religion-list'),
     path('religions/<int:pk>/', ReligionDetail.as_view(), name='religion-detail'),
-    path('community/<int:community_id>/religions/', ReligionByCommunity.as_view(), name='religions-by-community'),
+    path('community/<int:community_id>/religions/', CommunityByReligionBy.as_view(), name='religions-by-community'),
     path('states/', StateList.as_view(), name='state-list'),
     path('states/<int:state_id>/', StateDetail.as_view(), name='state-detail'),
     path('districts/', DistrictList.as_view(), name='district-list'),
