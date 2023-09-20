@@ -355,10 +355,10 @@ class ReligionDetail(APIView):
 class CommunityByReligionBy(APIView):
     def get(self, request, religion_id):
         try:
-            # Filter religions by community's ID
-            religions = Religion.objects.get(id=religion_id)
-            community = Community.objects.filter(community=community)
-            serializer = ReligionSerializer(religions, many=True)
+            # Filter religions by religion's ID
+            religion = Religion.objects.get(id=religion_id)
+            communities = Community.objects.filter(religion=religion)
+            serializer = ReligionSerializer(communities, many=True)  # Use 'communities' here, not 'religions'
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Religion.DoesNotExist:
             return Response({'detail': 'Religion not found'}, status=status.HTTP_404_NOT_FOUND)
