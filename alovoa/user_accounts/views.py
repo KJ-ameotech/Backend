@@ -347,10 +347,10 @@ class ReligionDetail(APIView):
         return Response({'detail': 'Religion not found'}, status=status.HTTP_404_NOT_FOUND)
 
 class ReligionByCommunity(APIView):
-    def get(self, request, community_name):
+    def get(self, request, community_id):
         try:
-            # Filter religions by community's name
-            community = Community.objects.get(name=community_name)
+            # Filter religions by community's ID
+            community = Community.objects.get(id=community_id)
             religions = Religion.objects.filter(community=community)
             serializer = ReligionSerializer(religions, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -449,10 +449,10 @@ class DistrictDetail(APIView):
 
 
 class DistrictsByState(APIView):
-    def get(self, request, state_name):
+    def get(self, request, state_id):
         try:
-            # Perform a lookup by state name
-            state = State.objects.get(name=state_name)
+            # Perform a lookup by state ID
+            state = State.objects.get(id=state_id)
 
             # Filter districts by the retrieved state
             districts = District.objects.filter(state=state)
@@ -460,6 +460,7 @@ class DistrictsByState(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         except State.DoesNotExist:
             return Response({'detail': 'State not found'}, status=status.HTTP_404_NOT_FOUND)
+
 
 
 class CheckEmailExists(APIView):
