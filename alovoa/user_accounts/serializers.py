@@ -89,6 +89,7 @@ class UploadedImagesSerializer(serializers.ModelSerializer):
 
 
 class ProfileSerializer(serializers.ModelSerializer):
+    user = CustomUserSerializer()
     class Meta:
         model = Profile
         fields = '__all__'
