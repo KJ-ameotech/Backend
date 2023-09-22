@@ -10,6 +10,7 @@ from rest_framework import serializers
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.generics import RetrieveAPIView, UpdateAPIView, DestroyAPIView
 from .models import Profile,Preference, UserLike, UploadedImages,Religion, Subscription,CustomUser, Community,State,District
 from .serializers import (CustomUserSerializer, ProfileSerializer,
                           PreferenceSerializer, UserLikeSerializer,
@@ -53,7 +54,19 @@ class CustomUserRegistration(APIView):
             }
             return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
 
+class CustomUserDetailView(RetrieveAPIView):
+    queryset = CustomUser.objects.all()
+    serializer_class = CustomUserSerializer
+    lookup_field = 'id'  # or 'pk' depending on how you want to identify users
 
+class CustomUserUpdateView(UpdateAPIView):
+    queryset = CustomUser.objects.all()
+    serializer_class = CustomUserSerializer
+    lookup_field = 'id'  # or 'pk' depending on how you want to identify users
+
+class CustomUserDeleteView(DestroyAPIView):
+    queryset = CustomUser.objects.all()
+    lookup_field = 'id'  # or 'pk' depending on how you want to identify users
 class UserLikeAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -81,31 +94,74 @@ class UserLikeAPIView(APIView):
 
 class UserLogin(APIView):
     def post(self, request):
+        email = request.data.get('email')
         username = request.data.get('username')
         password = request.data.get('password')
 
-        # Authenticate the user
-        user = authenticate(request, username=username, password=password)
+        if email is not None:
+            try:
+                user = CustomUser.objects.get(email=email)
+                
+            except CustomUser.DoesNotExist:
+                user = None
+            userdata = CustomUser.objects.get(email=email)
+            user_id = userdata.id
+            
+            if user is not None:
+                # Authenticate the user using email
+                if user.check_password(password):
+                    # Password matches, log the user in
+                    login(request, user)
 
-        if user is not None:
-            # If authentication is successful, log the user in
-            login(request, user)
-
-            # Generate refresh and access tokens
-            refresh = RefreshToken.for_user(user)
-            response_data = {
-                'status_code': status.HTTP_200_OK,
-                'access_token': str(refresh.access_token),
-                'refresh_token': str(refresh),
-            }
-            return Response(response_data, status=status.HTTP_200_OK)
+                    # Generate refresh and access tokens
+                    refresh = RefreshToken.for_user(user)
+                    response_data = {
+                        'status_code': status.HTTP_200_OK,
+                        'access_token': str(refresh.access_token),
+                        'refresh_token': str(refresh),
+                        'user_id': user_id
+                        
+                        
+                    }
+                    return Response(response_data, status=status.HTTP_200_OK)
+                else:
+                    # If authentication fails, return an error response
+                    response_data = {
+                        'status_code': status.HTTP_401_UNAUTHORIZED,
+                        'detail': 'Invalid credentials',
+                    }
+                    return Response(response_data, status=status.HTTP_401_UNAUTHORIZED)
+            else:
+                # If user not found, return an error response
+                response_data = {
+                    'status_code': status.HTTP_404_NOT_FOUND,
+                    'detail': 'User not found',
+                }
+                return Response(response_data, status=status.HTTP_404_NOT_FOUND)
+        
         else:
-            # If authentication fails, return an error response
-            response_data = {
-                'status_code': status.HTTP_401_UNAUTHORIZED,
-                'detail': 'Invalid credentials',
-            }
-            return Response(response_data, status=status.HTTP_401_UNAUTHORIZED)
+        # Authenticate the user
+            user = authenticate(request, username=username, password=password)
+
+            if user is not None:
+                # If authentication is successful, log the user in
+                login(request, user)
+
+                # Generate refresh and access tokens
+                refresh = RefreshToken.for_user(user)
+                response_data = {
+                    'status_code': status.HTTP_200_OK,
+                    'access_token': str(refresh.access_token),
+                    'refresh_token': str(refresh),
+                }
+                return Response(response_data, status=status.HTTP_200_OK)
+            else:
+                # If authentication fails, return an error response
+                response_data = {
+                    'status_code': status.HTTP_401_UNAUTHORIZED,
+                    'detail': 'Invalid credentials',
+                }
+                return Response(response_data, status=status.HTTP_401_UNAUTHORIZED)
 
 
 
@@ -489,19 +545,20 @@ class CheckEmailExists(APIView):
             return Response({'exists': False, "status":status.HTTP_404_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
         
 class ChangePassword(APIView):
-    def post(self, request):
-        email = request.data.get('email')
-        new_password = request.data.get('new_password')
+    pass
+    # def post(self, request):
+    #     email = request.data.get('email')
+    #     new_password = request.data.get('new_password')
 
-        # Check if the email exists in the database
-        User = CustomUser
-        try:
-            user = User.objects.get(email=email)
+    #     # Check if the email exists in the database
+    #     User = CustomUser
+    #     try:
+    #         user = User.objects.get(email=email)
 
-            # Update the user's password
-            user.set_password(new_password)
-            user.save()
+    #         # Update the user's password
+    #         user.set_password(new_password)
+    #         user.save()
 
-            return Response({'message': 'Password Changed successfully',"status":status.HTTP_200_OK}, status=status.HTTP_200_OK)
-        except User.DoesNotExist:
-            return Response({'Error while changing password': False, "status":status.HTTP_404_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+    #         return Response({'message': 'Password Changed successfully',"status":status.HTTP_200_OK}, status=status.HTTP_200_OK)
+    #     except User.DoesNotExist:
+    #         return Response({'Error while changing password': False, "status":status.HTTP_404_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)Screenshot from 2023-09-20 18-17-40
