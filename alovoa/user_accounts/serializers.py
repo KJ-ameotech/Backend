@@ -3,7 +3,7 @@ from django.core.validators import MinLengthValidator,MaxLengthValidator, MaxVal
 from .models import (CustomUser, Profile, Preference,
                      Religion, UserLike, UploadedImages,
                      Subscription,Community,District
-                     ,State)
+                     ,State, ProfilePicture)
 
 
 
@@ -126,4 +126,9 @@ class StateSerializer(serializers.ModelSerializer):
 class DistrictSerializer(serializers.ModelSerializer):
     class Meta:
         model = District
+        fields = '__all__'
+
+class ProfilePictureSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProfilePicture
         fields = '__all__'

@@ -58,11 +58,16 @@ class Profile(models.Model):
     income = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     hobbies = models.JSONField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    profile_picture = models.ImageField(upload_to="profile_pictures",default="default.jpg")
 
     def __str__(self):
         return self.user.username
 
+class ProfilePicture(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    image = models.ImageField(upload_to="profile_pictures", default="default.jpg")
+
+    def __str__(self):
+        return self.user.username
 
 class Preference(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)

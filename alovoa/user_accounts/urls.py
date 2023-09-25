@@ -2,10 +2,10 @@ from django.urls import path
 from .views import (CustomUserRegistration, UserLogin,
                     ProfileListCreateView,PreferenceListCreateView,
                     PreferenceDetailView, UserLikeAPIView,UploadedImagesListCreateView,
-                    SubscriptionAPIView,UserLoginWithEmail,CommunityList, CommunityDetail
+                    SubscriptionAPIView,CommunityList, CommunityDetail
                     ,ReligionList,ReligionDetail,CommunityByReligionBy,StateList,StateDetail,
                     DistrictList,DistrictDetail,DistrictsByState,CheckEmailExists,
-                    ChangePassword, CustomUserDetailView, CustomUserUpdateView, CustomUserDeleteView,ProfileRetrieveUpdateDestroyView)
+                    ChangePassword, CustomUserDetailView, CustomUserUpdateView, UserProfileDetailView,UserProfileListCreateView,CustomUserDeleteView,ProfileRetrieveUpdateDestroyView)
 
 
 
@@ -14,7 +14,6 @@ from .views import (CustomUserRegistration, UserLogin,
 urlpatterns = [
     path('register/', CustomUserRegistration.as_view(), name='user-registration'),
     path('login/', UserLogin.as_view(), name='user-login'),
-    path('email/login/', UserLoginWithEmail.as_view(), name='email-login'),
     path('preferences/', PreferenceListCreateView.as_view(), name='preference-list-create'),
     path('preferences/<int:pk>/', PreferenceDetailView.as_view(), name='preference-detail'),
     path('like/', UserLikeAPIView.as_view(), name='user-like'),
@@ -37,4 +36,6 @@ urlpatterns = [
     path('profiles/', ProfileListCreateView.as_view(), name='profile-list'),
     path('profiles/<int:pk>/', ProfileRetrieveUpdateDestroyView.as_view(), name='profile-detail'),
     path('api/user/<int:id>/delete/', CustomUserDeleteView.as_view(), name='user-delete'),
+    path('profiles_picture/', UserProfileListCreateView.as_view(), name='profile-list-create'),
+    path('profiles_picture/<int:user_id>/', UserProfileDetailView.as_view(), name='profile-detail'),
 ]

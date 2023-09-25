@@ -11,12 +11,12 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.generics import RetrieveAPIView, UpdateAPIView, DestroyAPIView
-from .models import Profile,Preference, UserLike, UploadedImages,Religion, Subscription,CustomUser, Community,State,District
+from .models import Profile,Preference, UserLike, UploadedImages,Religion, ProfilePicture,Subscription,CustomUser, Community,State,District
 from .serializers import (CustomUserSerializer, ProfileSerializer,
                           PreferenceSerializer, UserLikeSerializer,
                           UploadedImagesSerializer, SubscriptionSerializer,
                           CommunitySerializer,ReligionSerializer,StateSerializer,
-                          DistrictSerializer)
+                          DistrictSerializer, ProfilePictureSerializer)
 import cv2
 from django.views.decorators.csrf import csrf_exempt
 class CustomUserRegistration(APIView):
@@ -162,54 +162,6 @@ class UserLogin(APIView):
                     'detail': 'Invalid credentials',
                 }
                 return Response(response_data, status=status.HTTP_401_UNAUTHORIZED)
-class UserLoginWithEmail(APIView):
-    def post(self, request):
-        email = request.data.get('email')
-        password = request.data.get('password')
-
-        # Try to find the user by email
-        try:
-            user = CustomUser.objects.get(email=email)
-            
-        except CustomUser.DoesNotExist:
-            user = None
-        userdata = CustomUser.objects.get(email=email)
-        user_id = userdata.id
-        
-        if user is not None:
-            # Authenticate the user using email
-            if user.check_password(password):
-                # Password matches, log the user in
-                login(request, user)
-
-                # Generate refresh and access tokens
-                refresh = RefreshToken.for_user(user)
-                response_data = {
-                    'status_code': status.HTTP_200_OK,
-                    'access_token': str(refresh.access_token),
-                    'refresh_token': str(refresh),
-                    'user_id': user_id
-                    
-                    
-                }
-                return Response(response_data, status=status.HTTP_200_OK)
-            else:
-                # If authentication fails, return an error response
-                response_data = {
-                    'status_code': status.HTTP_401_UNAUTHORIZED,
-                    'detail': 'Invalid credentials',
-                }
-                return Response(response_data, status=status.HTTP_401_UNAUTHORIZED)
-        else:
-            # If user not found, return an error response
-            response_data = {
-                'status_code': status.HTTP_404_NOT_FOUND,
-                'detail': 'User not found',
-            }
-            return Response(response_data, status=status.HTTP_404_NOT_FOUND)
-
-
-
 
 
 
@@ -220,6 +172,8 @@ class ProfileListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         # Ensure the serializer receives the image data
         uploaded_image = self.request.FILES.get('profile_picture')
+
+        print(uploaded_image, "_________________________>")
 
         # Check if the uploaded image contains a human face
         if not self.contains_human_face(uploaded_image):
@@ -522,6 +476,40 @@ class DistrictsByState(APIView):
             return Response({'detail': 'State not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
+class UserProfileListCreateView(generics.ListCreateAPIView):
+    queryset = ProfilePicture.objects.all()
+    serializer_class = ProfilePictureSerializer
+
+class UserProfileDetailView(APIView):
+    def get_object(self, user_id):
+        try:
+            return ProfilePicture.objects.get(user_id=user_id)
+        except ProfilePicture.DoesNotExist:
+            return None
+
+    def get(self, request, user_id):
+        profile = self.get_object(user_id)
+        if profile is not None:
+            serializer = ProfilePictureSerializer(profile)
+            return Response(serializer.data)
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    def put(self, request, user_id):
+        profile = self.get_object(user_id)
+        if profile is not None:
+            serializer = ProfilePictureSerializer(profile, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    def delete(self, request, user_id):
+        profile = self.get_object(user_id)
+        if profile is not None:
+            profile.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
 class CheckEmailExists(APIView):
     def post(self, request):
