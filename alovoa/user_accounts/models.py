@@ -45,7 +45,7 @@ class UploadedImages(models.Model):
     user = models.ForeignKey(CustomUser,on_delete=models.CASCADE,default = "3")
     image  = models.ImageField(upload_to="uploaded_images",default='uploaded_default.jpg')
 class Profile(models.Model):
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     headline = models.CharField(max_length=255, null=True, blank=True)
     about_me = models.TextField(null=True, blank=True)
     religion = models.CharField(max_length=255, null=True, blank=True)

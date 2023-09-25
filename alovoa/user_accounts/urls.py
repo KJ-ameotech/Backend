@@ -1,11 +1,11 @@
 from django.urls import path
 from .views import (CustomUserRegistration, UserLogin,
-                    ProfileListCreateView, ProfileDetailView,PreferenceListCreateView,
+                    ProfileListCreateView,PreferenceListCreateView,
                     PreferenceDetailView, UserLikeAPIView,UploadedImagesListCreateView,
                     SubscriptionAPIView,UserLoginWithEmail,CommunityList, CommunityDetail
                     ,ReligionList,ReligionDetail,CommunityByReligionBy,StateList,StateDetail,
                     DistrictList,DistrictDetail,DistrictsByState,CheckEmailExists,
-                    ChangePassword, CustomUserDetailView, CustomUserUpdateView, CustomUserDeleteView)
+                    ChangePassword, CustomUserDetailView, CustomUserUpdateView, CustomUserDeleteView,ProfileRetrieveUpdateDestroyView)
 
 
 
@@ -15,8 +15,6 @@ urlpatterns = [
     path('register/', CustomUserRegistration.as_view(), name='user-registration'),
     path('login/', UserLogin.as_view(), name='user-login'),
     path('email/login/', UserLoginWithEmail.as_view(), name='email-login'),
-    path('profiles/', ProfileListCreateView.as_view(), name='profile-list-create'),
-    path('profiles/<int:pk>/', ProfileDetailView.as_view(), name='profile-detail'),
     path('preferences/', PreferenceListCreateView.as_view(), name='preference-list-create'),
     path('preferences/<int:pk>/', PreferenceDetailView.as_view(), name='preference-detail'),
     path('like/', UserLikeAPIView.as_view(), name='user-like'),
@@ -36,5 +34,7 @@ urlpatterns = [
     path('password-change/', ChangePassword.as_view(), name='change-password'),
     path('api/user/<int:id>/', CustomUserDetailView.as_view(), name='user-detail'),
     path('api/user/<int:id>/update/', CustomUserUpdateView.as_view(), name='user-update'),
+    path('profiles/', ProfileListCreateView.as_view(), name='profile-list'),
+    path('profiles/<int:pk>/', ProfileRetrieveUpdateDestroyView.as_view(), name='profile-detail'),
     path('api/user/<int:id>/delete/', CustomUserDeleteView.as_view(), name='user-delete'),
 ]

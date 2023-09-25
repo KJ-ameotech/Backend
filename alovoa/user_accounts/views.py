@@ -162,9 +162,6 @@ class UserLogin(APIView):
                     'detail': 'Invalid credentials',
                 }
                 return Response(response_data, status=status.HTTP_401_UNAUTHORIZED)
-
-
-
 class UserLoginWithEmail(APIView):
     def post(self, request):
         email = request.data.get('email')
@@ -217,7 +214,7 @@ class UserLoginWithEmail(APIView):
 
 
 class ProfileListCreateView(generics.ListCreateAPIView):
-    queryset = Profile.objects.all()
+    queryset = Profile.objects.all()    
     serializer_class = ProfileSerializer
 
     def perform_create(self, serializer):
@@ -245,12 +242,15 @@ class ProfileListCreateView(generics.ListCreateAPIView):
         # Detect faces in the image
         faces = face_cascade.detectMultiScale(gray, scaleFactor=1.3, minNeighbors=5, minSize=(30, 30))
 
-        # Check if only one face is found
+        # Check if exactly one face is found
         if len(faces) == 1:
             return True
         else:
             return False
-
+        
+class ProfileRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Profile.objects.all()
+    serializer_class = ProfileSerializer
 
 class UploadedImagesListCreateView(generics.ListCreateAPIView):
     queryset = UploadedImages.objects.all()
@@ -288,10 +288,7 @@ class UploadedImagesListCreateView(generics.ListCreateAPIView):
         instance = self.get_object()
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
-class ProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Profile.objects.all()
-    serializer_class = ProfileSerializer
+
 
 
 
