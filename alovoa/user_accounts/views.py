@@ -480,6 +480,44 @@ class UserProfileListCreateView(generics.ListCreateAPIView):
     queryset = ProfilePicture.objects.all()
     serializer_class = ProfilePictureSerializer
 
+    def perform_create(self, serializer):
+        uploaded_image = self.request.FILES.get('image')
+
+        if uploaded_image is None:
+            print("No profile_picture file uploaded.")
+            return Response({'error': 'Please provide a profile_picture file.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            if not self.contains_human_face(uploaded_image):
+                return Response({'error': 'Please provide an image with a single human face.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            serializer.save(profile_picture=uploaded_image)
+        except Exception as e:
+            print(f"Error processing image: {str(e)}")
+            return Response({'error': 'Error processing the image.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+    def contains_human_face(self, image):
+        # Load the Haar Cascade Classifier for face detection
+        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+
+        # Read the uploaded image
+        image_data = image.read()
+        nparr = np.fromstring(image_data, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+        # Convert the image to grayscale for face detection
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+        # Detect faces in the image
+        faces = face_cascade.detectMultiScale(gray, scaleFactor=1.3, minNeighbors=5, minSize=(30, 30))
+
+        # Check if exactly one face is found
+        if len(faces) == 1:
+            return True
+        else:
+            return False
+
 class UserProfileDetailView(APIView):
     def get_object(self, user_id):
         try:
