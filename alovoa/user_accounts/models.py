@@ -26,8 +26,9 @@ class Subscription(models.Model):
 
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     subscription_type = models.CharField(max_length=10, choices=SUBSCRIPTION_CHOICES)
-    start_date = models.DateField()
+    start_date = models.DateField(auto_now_add=True)
     end_date = models.DateField()
+
 class UserLike(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='likes_given')
     liked_user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='likes_received')
@@ -44,6 +45,7 @@ class Image(models.Model):
 class UploadedImages(models.Model):
     user = models.ForeignKey(CustomUser,on_delete=models.CASCADE,default = "3")
     image  = models.ImageField(upload_to="uploaded_images",default='uploaded_default.jpg')
+
 class Profile(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     headline = models.CharField(max_length=255, null=True, blank=True)
@@ -63,7 +65,7 @@ class Profile(models.Model):
         return self.user.username
 
 class ProfilePicture(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, unique=True)
     image = models.ImageField(upload_to="profile_pictures", default="default.jpg")
 
     def __str__(self):

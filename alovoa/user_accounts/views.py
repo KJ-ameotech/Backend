@@ -6,6 +6,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.views import APIView
 from django.http import JsonResponse
 import numpy as np
+from django.http import Http404
 from rest_framework import serializers
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -142,6 +143,8 @@ class UserLogin(APIView):
         else:
         # Authenticate the user
             user = authenticate(request, username=username, password=password)
+            userdata = CustomUser.objects.get(username=username)
+            user_id = userdata.id
 
             if user is not None:
                 # If authentication is successful, log the user in
@@ -153,6 +156,7 @@ class UserLogin(APIView):
                     'status_code': status.HTTP_200_OK,
                     'access_token': str(refresh.access_token),
                     'refresh_token': str(refresh),
+                    'user_id': user_id
                 }
                 return Response(response_data, status=status.HTTP_200_OK)
             else:
@@ -169,38 +173,7 @@ class ProfileListCreateView(generics.ListCreateAPIView):
     queryset = Profile.objects.all()    
     serializer_class = ProfileSerializer
 
-    def perform_create(self, serializer):
-        # Ensure the serializer receives the image data
-        uploaded_image = self.request.FILES.get('profile_picture')
-
-        print(uploaded_image, "_________________________>")
-
-        # Check if the uploaded image contains a human face
-        if not self.contains_human_face(uploaded_image):
-            return Response({'error': 'Please provide an image with a single human face.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        serializer.save(profile_picture=uploaded_image)
-
-    def contains_human_face(self, image):
-        # Load the Haar Cascade Classifier for face detection
-        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-
-        # Read the uploaded image
-        image_data = image.read()
-        nparr = np.fromstring(image_data, np.uint8)
-        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-
-        # Convert the image to grayscale for face detection
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-        # Detect faces in the image
-        faces = face_cascade.detectMultiScale(gray, scaleFactor=1.3, minNeighbors=5, minSize=(30, 30))
-
-        # Check if exactly one face is found
-        if len(faces) == 1:
-            return True
-        else:
-            return False
+    
         
 class ProfileRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Profile.objects.all()
@@ -254,7 +227,7 @@ class PreferenceDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Preference.objects.all()
     serializer_class = PreferenceSerializer
 
-class SubscriptionAPIView(APIView):
+class SubscriptionListAPIView(APIView):
     def get(self, request):
         subscriptions = Subscription.objects.all()
         serializer = SubscriptionSerializer(subscriptions, many=True)
@@ -266,6 +239,31 @@ class SubscriptionAPIView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class SubscriptionDetailAPIView(APIView):
+    def get_object(self, pk):
+        try:
+            return Subscription.objects.get(pk=pk)
+        except Subscription.DoesNotExist:
+            raise Http404
+
+    def get(self, request, pk):
+        subscription = self.get_object(pk)
+        serializer = SubscriptionSerializer(subscription)
+        return Response(serializer.data)
+
+    def put(self, request, pk):
+        subscription = self.get_object(pk)
+        serializer = SubscriptionSerializer(subscription, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        subscription = self.get_object(pk)
+        subscription.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class CommunityList(APIView):
@@ -476,112 +474,37 @@ class DistrictsByState(APIView):
             return Response({'detail': 'State not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
-class UserProfileListCreateView(generics.ListCreateAPIView):
+class UserProfilepictureListCreateView(generics.ListCreateAPIView):
     queryset = ProfilePicture.objects.all()
     serializer_class = ProfilePictureSerializer
 
-    def perform_create(self, serializer):
-        uploaded_image = self.request.FILES.get('image')
-
-        if uploaded_image is None:
-            print("No profile_picture file uploaded.")
-            return Response({'error': 'Please provide a profile_picture file.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            if not self.contains_human_face(uploaded_image):
-                return Response({'error': 'Please provide an image with a single human face.'}, status=status.HTTP_400_BAD_REQUEST)
-
-            serializer.save(profile_picture=uploaded_image)
-        except Exception as e:
-            print(f"Error processing image: {str(e)}")
-            return Response({'error': 'Error processing the image.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-    def contains_human_face(self, image):
-        # Load the Haar Cascade Classifier for face detection
-        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-
-        # Read the uploaded image
-        image_data = image.read()
-        nparr = np.fromstring(image_data, np.uint8)
-        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-
-        # Convert the image to grayscale for face detection
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-        # Detect faces in the image
-        faces = face_cascade.detectMultiScale(gray, scaleFactor=1.3, minNeighbors=5, minSize=(30, 30))
-
-        # Check if exactly one face is found
-        if len(faces) == 1:
-            return True
-        else:
-            return False
-
-class UserProfileDetailView(APIView):
-    def get_object(self, user_id):
-        try:
-            return ProfilePicture.objects.get(user_id=user_id)
-        except ProfilePicture.DoesNotExist:
-            return None
-
-    def get(self, request, user_id):
-        profile = self.get_object(user_id)
-        if profile is not None:
-            serializer = ProfilePictureSerializer(profile)
-            return Response(serializer.data)
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
-    def put(self, request, user_id):
-        profile = self.get_object(user_id)
-        if profile is not None:
-            serializer = ProfilePictureSerializer(profile, data=request.data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
-    def delete(self, request, user_id):
-        profile = self.get_object(user_id)
-        if profile is not None:
-            profile.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(status=status.HTTP_404_NOT_FOUND)
+class UserProfilepictureDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = ProfilePicture.objects.all()
+    serializer_class = ProfilePictureSerializer
+    lookup_field = 'user_id'  
 
 class CheckEmailExists(APIView):
     def post(self, request):
         email = request.data.get('email')
-        new_password = request.data.get('new_password')
-
-        # Check if the email exists in the database
         User = CustomUser
         try:
             user = User.objects.get(email=email)
-
-            # Update the user's password
-            # user.set_password(new_password)
-            # user.save()
-
             return Response({'message': 'Email found',"status":status.HTTP_200_OK}, status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response({'exists': False, "status":status.HTTP_404_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
         
 class ChangePassword(APIView):
-    pass
-    # def post(self, request):
-    #     email = request.data.get('email')
-    #     new_password = request.data.get('new_password')
+    def post(self, request):
+        email = request.data.get('email')
+        new_password = request.data.get('new_password')
+        print(email, new_password)
+        # Check if the email exists in the database
+        User = CustomUser
+        try:
+            user = User.objects.get(email=email)
+            user.set_password(new_password)
+            user.save()
 
-    #     # Check if the email exists in the database
-    #     User = CustomUser
-    #     try:
-    #         user = User.objects.get(email=email)
-
-    #         # Update the user's password
-    #         user.set_password(new_password)
-    #         user.save()
-
-    #         return Response({'message': 'Password Changed successfully',"status":status.HTTP_200_OK}, status=status.HTTP_200_OK)
-    #     except User.DoesNotExist:
-    #         return Response({'Error while changing password': False, "status":status.HTTP_404_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)Screenshot from 2023-09-20 18-17-40
+            return Response({'message': 'Password Changed successfully'}, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)

@@ -2,10 +2,10 @@ from django.urls import path
 from .views import (CustomUserRegistration, UserLogin,
                     ProfileListCreateView,PreferenceListCreateView,
                     PreferenceDetailView, UserLikeAPIView,UploadedImagesListCreateView,
-                    SubscriptionAPIView,CommunityList, CommunityDetail
+                    SubscriptionListAPIView,SubscriptionDetailAPIView,CommunityList, CommunityDetail
                     ,ReligionList,ReligionDetail,CommunityByReligionBy,StateList,StateDetail,
                     DistrictList,DistrictDetail,DistrictsByState,CheckEmailExists,
-                    ChangePassword, CustomUserDetailView, CustomUserUpdateView, UserProfileDetailView,UserProfileListCreateView,CustomUserDeleteView,ProfileRetrieveUpdateDestroyView)
+                    ChangePassword, CustomUserDetailView, CustomUserUpdateView, UserProfilepictureDetailView,UserProfilepictureListCreateView,CustomUserDeleteView,ProfileRetrieveUpdateDestroyView)
 
 
 
@@ -18,7 +18,8 @@ urlpatterns = [
     path('preferences/<int:pk>/', PreferenceDetailView.as_view(), name='preference-detail'),
     path('like/', UserLikeAPIView.as_view(), name='user-like'),
     path('uploaded_images/', UploadedImagesListCreateView.as_view(), name='image-upload'),
-    path('subcription/', SubscriptionAPIView.as_view(), name='subcription'),
+    path('subscriptions/', SubscriptionListAPIView.as_view(), name='subscription-list'),
+    path('subscriptions/<int:pk>/', SubscriptionDetailAPIView.as_view(), name='subscription-detail'),
     path('communities/', CommunityList.as_view(), name='community-list'),
     path('communities/<int:pk>/', CommunityDetail.as_view(), name='community-detail'),
     path('religions/', ReligionList.as_view(), name='religion-list'),
@@ -36,6 +37,6 @@ urlpatterns = [
     path('profiles/', ProfileListCreateView.as_view(), name='profile-list'),
     path('profiles/<int:pk>/', ProfileRetrieveUpdateDestroyView.as_view(), name='profile-detail'),
     path('api/user/<int:id>/delete/', CustomUserDeleteView.as_view(), name='user-delete'),
-    path('profiles_picture/', UserProfileListCreateView.as_view(), name='profile-list-create'),
-    path('profiles_picture/<int:user_id>/', UserProfileDetailView.as_view(), name='profile-detail'),
+    path('profiles_picture/', UserProfilepictureListCreateView.as_view(), name='profile-list-create'),
+    path('profiles_picture/<int:user_id>/', UserProfilepictureDetailView.as_view(), name='profile-detail'),
 ]
