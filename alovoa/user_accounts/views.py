@@ -508,3 +508,39 @@ class ChangePassword(APIView):
             return Response({'message': 'Password Changed successfully'}, status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+from django.utils import timezone
+from django.db.models import Q
+class CustomUserSearchAPIView(generics.ListAPIView):
+    serializer_class = CustomUserSerializer
+
+    def get_queryset(self):
+        # Get parameters from the request
+        age_from = self.request.query_params.get('age_from')
+        age_to = self.request.query_params.get('age_to')
+        gender = self.request.query_params.get('gender')
+        religion = self.request.query_params.get('religion')
+
+        # Start with all users
+        queryset = CustomUser.objects.all()
+
+        # Filter by age (assuming date_of_birth is in yyyy-mm-dd format)
+        if age_from and age_to:
+            birth_year_to = timezone.now().year - int(age_from)
+            birth_year_from = timezone.now().year - int(age_to)
+            queryset = queryset.filter(
+                Q(date_of_birth__year__lte=birth_year_to) &
+                Q(date_of_birth__year__gte=birth_year_from)
+            )
+
+        # Filter by gender
+        if gender:
+            queryset = queryset.filter(gender=gender)
+
+        # Filter by religion
+        if religion:
+            queryset = queryset.filter(religion=religion)
+
+        return queryset
+
+

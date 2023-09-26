@@ -64,6 +64,11 @@ class Profile(models.Model):
     def __str__(self):
         return self.user.username
 
+class Userdata(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    user_image = models.ForeignKey(UploadedImages, on_delete=models.CASCADE)
+    user_profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
+
 class ProfilePicture(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, unique=True)
     image = models.ImageField(upload_to="profile_pictures", default="default.jpg")
