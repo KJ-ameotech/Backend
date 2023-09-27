@@ -5,7 +5,7 @@ from .views import (CustomUserRegistration, UserLogin,
                     SubscriptionListAPIView,SubscriptionDetailAPIView,CommunityList, CommunityDetail
                     ,ReligionList,ReligionDetail,CommunityByReligionBy,StateList,StateDetail,
                     DistrictList,DistrictDetail,DistrictsByState,CheckEmailExists,
-                    ChangePassword, CustomUserDetailView,UserLikeAPIView,CustomUserSearchAPIView, UserLikeDetailView,CustomUserUpdateView, UserProfilepictureDetailView,UserProfilepictureListCreateView,CustomUserDeleteView,ProfileRetrieveUpdateDestroyView)
+                    ChangePassword, CustomUserDetailView,UserLikeAPIView,CustomUserList,CustomUserSearchAPIView, UserLikeDetailView,CustomUserUpdateView, UserProfilepictureDetailView,UserProfilepictureListCreateView,CustomUserDeleteView,ProfileRetrieveUpdateDestroyView)
 
 
 
@@ -42,4 +42,5 @@ urlpatterns = [
     path('search/', CustomUserSearchAPIView.as_view(), name='user-search'),
     path('userlikes/<int:pk>/', UserLikeDetailView.as_view(), name='userlike-detail'),
     path('api/user-like/', UserLikeAPIView.as_view(), name='user-like-list'),
+    path('api/all-users/', CustomUserList.as_view(), name='all-users'),
 ]

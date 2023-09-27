@@ -528,15 +528,29 @@ class CustomUserSearchAPIView(APIView):
 
         # Start with all users
         queryset = CustomUser.objects.all()
-        profile_images = []
+
+        # Create dictionaries to store profile pictures and profile data
+        profile_images = {}
+        profile_data_dict = {}
 
         for user in queryset:
             user_id = user.id
+
+            # Fetch profile picture for the user if available
             profile_image = ProfilePicture.objects.filter(user_id=user_id).first()
-            profile_images.append({
-                'user_id': user_id,
-                'profile_picture': profile_image.image.url if profile_image else None,
-            })
+            if profile_image:
+                profile_images[user_id] = profile_image.image.url
+            else:
+                profile_images[user_id] = None
+
+            # Fetch profile data for the user if available
+            profile_data = Profile.objects.filter(user_id=user_id).first()
+            if profile_data:
+                # Assuming you have a UserProfileSerializer for the profile data
+                profile_data_serializer = ProfileSerializer(profile_data)
+                profile_data_dict[user_id] = profile_data_serializer.data
+            else:
+                profile_data_dict[user_id] = None
 
         # Filter by age (assuming date_of_birth is in yyyy-mm-dd format)
         if age_from and age_to:
@@ -558,9 +572,11 @@ class CustomUserSearchAPIView(APIView):
         # Serialize the queryset
         serializer = self.serializer_class(queryset, many=True)
 
-        # Add profile_images to the serialized data
-        for user_data, profile_data in zip(serializer.data, profile_images):
-            user_data['profile_picture'] = profile_data['profile_picture']
+        # Add profile_images and profile_data to the serialized data
+        for user_data in serializer.data:
+            user_id = user_data['id']
+            user_data['profile_picture'] = profile_images.get(user_id)
+            user_data['profile_data'] = profile_data_dict.get(user_id)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -583,3 +599,32 @@ class UserLikeAPIView(APIView):
             return Response({"error": "liked_user_id parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
 
 
+class CustomUserList(APIView):
+    def get(self, request):
+        users = CustomUser.objects.all()
+        user_serializer = CustomUserSerializer(users, many=True)
+
+        user_data_with_images_and_profile = []
+
+        for user in user_serializer.data:
+            user_data = user  # Copy the user data to a new dictionary
+
+            # Get the user's profile picture if available
+            try:
+                profile_picture = ProfilePicture.objects.get(user=user['id'])
+                profile_picture_serializer = ProfilePictureSerializer(profile_picture)
+                user_data['profile_picture'] = profile_picture_serializer.data
+            except ProfilePicture.DoesNotExist:
+                user_data['profile_picture'] = None  # No profile picture found
+
+            # Get the user's profile data if available
+            try:
+                profile_data = Profile.objects.get(user=user['id'])  # Assuming UserProfile is your profile model
+                profile_data_serializer = ProfileSerializer(profile_data)  # Create a serializer for UserProfile
+                user_data['profile_data'] = profile_data_serializer.data
+            except Profile.DoesNotExist:
+                user_data['profile_data'] = None  # No profile data found
+
+            user_data_with_images_and_profile.append(user_data)
+
+        return Response(user_data_with_images_and_profile)
