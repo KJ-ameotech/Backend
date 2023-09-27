@@ -74,6 +74,8 @@ class UserLikeListCreateView(generics.ListCreateAPIView):
     queryset = UserLike.objects.all()
     serializer_class = UserLikeSerializer
 
+
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -95,6 +97,15 @@ class UserLikeListCreateView(generics.ListCreateAPIView):
 class UserLikeDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = UserLike.objects.all()
     serializer_class = UserLikeSerializer
+
+
+    def get(self, request, *args, **kwargs):
+        try:
+            user_like = self.get_object()
+            serializer = self.get_serializer(user_like)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except UserLike.DoesNotExist:
+            return Response({'error': 'UserLike does not exist.'}, status=status.HTTP_404_NOT_FOUND)
 
 class UserLogin(APIView):
     def post(self, request):
@@ -642,3 +653,12 @@ class CustomUserList(APIView):
             user_data_with_images_and_profile.append(user_data)
 
         return Response(user_data_with_images_and_profile)
+
+class UserLikeListViewRequestsAccepted(generics.ListAPIView):
+    serializer_class = UserLikeSerializer
+
+    def get_queryset(self):
+        user_id = self.kwargs['user_id']  # Assuming you pass the user_id in the URL
+        return UserLike.objects.filter(user_id=user_id, approved=True)
+
+

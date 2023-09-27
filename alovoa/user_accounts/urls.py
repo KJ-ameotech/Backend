@@ -5,7 +5,7 @@ from .views import (CustomUserRegistration, UserLogin,
                     SubscriptionListAPIView,SubscriptionDetailAPIView,CommunityList, CommunityDetail
                     ,ReligionList,ReligionDetail,CommunityByReligionBy,StateList,StateDetail,
                     DistrictList,DistrictDetail,DistrictsByState,CheckEmailExists,
-                    ChangePassword, CustomUserDetailView,UserLikeAPIView,UserLikeCountAPIView,CustomUserList,CustomUserSearchAPIView, UserLikeDetailView,CustomUserUpdateView, UserProfilepictureDetailView,UserProfilepictureListCreateView,CustomUserDeleteView,ProfileRetrieveUpdateDestroyView)
+                    ChangePassword, CustomUserDetailView,UserLikeAPIView,UserLikeListViewRequestsAccepted,UserLikeCountAPIView,CustomUserList,CustomUserSearchAPIView, UserLikeDetailView,CustomUserUpdateView, UserProfilepictureDetailView,UserProfilepictureListCreateView,CustomUserDeleteView,ProfileRetrieveUpdateDestroyView)
 
 
 
@@ -44,4 +44,6 @@ urlpatterns = [
     path('api/notification/', UserLikeAPIView.as_view(), name='follow-notification'),
     path('api/all-users/', CustomUserList.as_view(), name='all-users'),
     path('api/notification-count/', UserLikeCountAPIView.as_view(), name='count'),
+    path('followed-users/<int:user_id>/', UserLikeListViewRequestsAccepted.as_view(), name='user-like-list'),
+
 ]

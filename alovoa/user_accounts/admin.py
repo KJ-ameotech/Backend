@@ -20,4 +20,4 @@ admin.site.register(Community),
 admin.site.register(Religion),
 admin.site.register(State),
 admin.site.register(District),
-admin.site.register(ProfilePicture)
+admin.site.register(ProfilePicture),
