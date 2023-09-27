@@ -514,10 +514,12 @@ class ChangePassword(APIView):
 
 from django.utils import timezone
 from django.db.models import Q
-class CustomUserSearchAPIView(generics.ListAPIView):
+
+
+class CustomUserSearchAPIView(APIView):
     serializer_class = CustomUserSerializer
 
-    def get_queryset(self):
+    def get(self, request, *args, **kwargs):
         # Get parameters from the request
         age_from = self.request.query_params.get('age_from')
         age_to = self.request.query_params.get('age_to')
@@ -527,6 +529,7 @@ class CustomUserSearchAPIView(generics.ListAPIView):
         # Start with all users
         queryset = CustomUser.objects.all()
         profile_images = []
+
         for user in queryset:
             user_id = user.id
             profile_image = ProfilePicture.objects.filter(user_id=user_id).first()
@@ -534,8 +537,6 @@ class CustomUserSearchAPIView(generics.ListAPIView):
                 'user_id': user_id,
                 'profile_picture': profile_image.image.url if profile_image else None,
             })
-            print(profile_images, "000000000000000000000000000000000")
-
 
         # Filter by age (assuming date_of_birth is in yyyy-mm-dd format)
         if age_from and age_to:
@@ -554,8 +555,13 @@ class CustomUserSearchAPIView(generics.ListAPIView):
         if religion:
             queryset = queryset.filter(religion=religion)
 
+        # Serialize the queryset
+        serializer = self.serializer_class(queryset, many=True)
 
+        # Add profile_images to the serialized data
+        for user_data, profile_data in zip(serializer.data, profile_images):
+            user_data['profile_picture'] = profile_data['profile_picture']
 
-        return queryset
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
