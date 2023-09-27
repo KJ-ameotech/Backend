@@ -598,7 +598,21 @@ class UserLikeAPIView(APIView):
             # If liked_user_id is not provided, return a 400 Bad Request response
             return Response({"error": "liked_user_id parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
 
+class UserLikeCountAPIView(APIView):
+    serializer_class = UserLikeSerializer  # Replace with your actual serializer
 
+    def get(self, request, *args, **kwargs):
+        # Get the liked_user_id from the URL query parameter
+        liked_user_id = self.request.query_params.get('liked_user_id')
+
+        # Check if liked_user_id is provided in the query parameters
+        if liked_user_id is not None:
+            # Filter UserLike objects based on the liked_user_id and get the count
+            count = UserLike.objects.filter(liked_user_id=liked_user_id).count()
+            return Response({"count": count}, status=status.HTTP_200_OK)
+        else:
+            # If liked_user_id is not provided, return a 400 Bad Request response
+            return Response({"error": "liked_user_id parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
 class CustomUserList(APIView):
     def get(self, request):
         users = CustomUser.objects.all()
