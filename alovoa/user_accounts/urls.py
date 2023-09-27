@@ -1,11 +1,11 @@
 from django.urls import path
 from .views import (CustomUserRegistration, UserLogin,
                     ProfileListCreateView,PreferenceListCreateView,
-                    PreferenceDetailView, UserLikeAPIView,UploadedImagesListCreateView,
+                    PreferenceDetailView, UserLikeListCreateView,UploadedImagesListCreateView,
                     SubscriptionListAPIView,SubscriptionDetailAPIView,CommunityList, CommunityDetail
                     ,ReligionList,ReligionDetail,CommunityByReligionBy,StateList,StateDetail,
                     DistrictList,DistrictDetail,DistrictsByState,CheckEmailExists,
-                    ChangePassword, CustomUserDetailView,CustomUserSearchAPIView, CustomUserUpdateView, UserProfilepictureDetailView,UserProfilepictureListCreateView,CustomUserDeleteView,ProfileRetrieveUpdateDestroyView)
+                    ChangePassword, CustomUserDetailView,CustomUserSearchAPIView, UserLikeDetailView,CustomUserUpdateView, UserProfilepictureDetailView,UserProfilepictureListCreateView,CustomUserDeleteView,ProfileRetrieveUpdateDestroyView)
 
 
 
@@ -16,7 +16,7 @@ urlpatterns = [
     path('login/', UserLogin.as_view(), name='user-login'),
     path('preferences/', PreferenceListCreateView.as_view(), name='preference-list-create'),
     path('preferences/<int:pk>/', PreferenceDetailView.as_view(), name='preference-detail'),
-    path('like/', UserLikeAPIView.as_view(), name='user-like'),
+    path('like/', UserLikeListCreateView.as_view(), name='user-like'),
     path('uploaded_images/', UploadedImagesListCreateView.as_view(), name='image-upload'),
     path('subscriptions/', SubscriptionListAPIView.as_view(), name='subscription-list'),
     path('subscriptions/<int:pk>/', SubscriptionDetailAPIView.as_view(), name='subscription-detail'),
@@ -40,4 +40,5 @@ urlpatterns = [
     path('profiles_picture/', UserProfilepictureListCreateView.as_view(), name='profile-list-create'),
     path('profiles_picture/<int:user_id>/', UserProfilepictureDetailView.as_view(), name='profile-detail'),
     path('search/', CustomUserSearchAPIView.as_view(), name='user-search'),
+    path('userlikes/<int:pk>/', UserLikeDetailView.as_view(), name='userlike-detail'),
 ]

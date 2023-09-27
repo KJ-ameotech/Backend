@@ -129,7 +129,6 @@ class DistrictSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class ProfilePictureSerializer(serializers.ModelSerializer):
-    user = CustomUserSerializer()
     class Meta:
         model = ProfilePicture
         fields = '__all__'

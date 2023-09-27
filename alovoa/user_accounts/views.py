@@ -68,30 +68,33 @@ class CustomUserUpdateView(UpdateAPIView):
 class CustomUserDeleteView(DestroyAPIView):
     queryset = CustomUser.objects.all()
     lookup_field = 'id'  # or 'pk' depending on how you want to identify users
-class UserLikeAPIView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request):
-        liked_user_id = request.data.get('liked_user_id')
 
-        if liked_user_id == request.user.id:
-            return Response({'detail': 'You cannot like yourself.'}, status=status.HTTP_400_BAD_REQUEST)
+class UserLikeListCreateView(generics.ListCreateAPIView):
+    queryset = UserLike.objects.all()
+    serializer_class = UserLikeSerializer
 
-        # Check if the user already liked the same user before
-        if UserLike.objects.filter(user=request.user, liked_user_id=liked_user_id).exists():
-            return Response({'detail': 'You already liked this user.'}, status=status.HTTP_400_BAD_REQUEST)
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        # Create the like
-        like = UserLike.objects.create(user=request.user, liked_user_id=liked_user_id)
+        # Check if 'user' and 'liked_user' exist in the database
+        user_id = serializer.validated_data['user'].id
+        liked_user_id = serializer.validated_data['liked_user'].id
 
-        # Check if there is a mutual like
-        if UserLike.objects.filter(user=like.liked_user, liked_user=request.user).exists():
-            # Send an email notification about the match
-            print("Congratulations! It's a match!")
+        user_exists = CustomUser.objects.filter(id=user_id).exists()
+        liked_user_exists = CustomUser.objects.filter(id=liked_user_id).exists()
 
-        serializer = UserLikeSerializer(like)
+        if not user_exists or not liked_user_exists:
+            return Response({'error': 'User or liked user does not exist.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+
+class UserLikeDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = UserLike.objects.all()
+    serializer_class = UserLikeSerializer
 
 class UserLogin(APIView):
     def post(self, request):
@@ -523,6 +526,16 @@ class CustomUserSearchAPIView(generics.ListAPIView):
 
         # Start with all users
         queryset = CustomUser.objects.all()
+        profile_images = []
+        for user in queryset:
+            user_id = user.id
+            profile_image = ProfilePicture.objects.filter(user_id=user_id).first()
+            profile_images.append({
+                'user_id': user_id,
+                'profile_picture': profile_image.image.url if profile_image else None,
+            })
+            print(profile_images, "000000000000000000000000000000000")
+
 
         # Filter by age (assuming date_of_birth is in yyyy-mm-dd format)
         if age_from and age_to:
@@ -540,6 +553,8 @@ class CustomUserSearchAPIView(generics.ListAPIView):
         # Filter by religion
         if religion:
             queryset = queryset.filter(religion=religion)
+
+
 
         return queryset
 
