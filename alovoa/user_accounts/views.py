@@ -661,52 +661,65 @@ class UserLikeListViewRequestsAccepted(APIView):
         user_likes = UserLike.objects.filter(user_id=user_id, approved=True)
 
         # Extract user IDs from user_likes queryset
-        user_ids = [user_data.user.id for user_data in user_likes]
+        liked_user_ids = [user_like.liked_user.id for user_like in user_likes]
 
-        # Retrieve CustomUser objects for the user IDs and rename the variable to user_data
-        user_data = CustomUser.objects.filter(id__in=user_ids)
+        # Retrieve CustomUser objects for the specified user_id and liked user IDs
+        user_data = CustomUser.objects.filter(id=user_id)
+        liked_users_data = CustomUser.objects.filter(id__in=liked_user_ids)
 
-        # Retrieve Profile objects for the user IDs and rename the variable to profile_data
-        profile_data = Profile.objects.filter(user_id__in=user_ids)
+        # Retrieve Profile objects for both the specified user_id and liked user IDs
+        profile_data = Profile.objects.filter(user_id__in=[user_id] + liked_user_ids)
 
-        # Retrieve ProfilePicture objects for the user IDs
-        profile_picture_data = ProfilePicture.objects.filter(user_id__in=user_ids)
+        # Retrieve ProfilePicture objects for both the specified user_id and liked user IDs
+        profile_picture_data = ProfilePicture.objects.filter(user_id__in=[user_id] + liked_user_ids)
 
         # Serialize the UserLike objects
         user_likes_data = UserLikeSerializer(user_likes, many=True).data
 
-        # Serialize the CustomUser objects (now named user_data)
+        # Serialize the CustomUser objects for the specified user_id
         user_data = CustomUserSerializer(user_data, many=True).data
 
-        # Serialize the Profile objects (now named profile_data)
+        # Serialize the CustomUser objects for liked users
+        liked_users_data = CustomUserSerializer(liked_users_data, many=True).data
+
+        # Serialize the Profile objects
         profile_data = ProfileSerializer(profile_data, many=True).data
 
-        # Serialize the ProfilePicture objects
+        # Serialize the ProfilePicture objects for both the specified user_id and liked user IDs
         profile_picture_data = ProfilePictureSerializer(profile_picture_data, many=True).data
 
-        # Create dictionaries to map user IDs to their corresponding user data, profile data, and profile picture data
+        # Create dictionaries to map user IDs to their corresponding data
         user_data_dict = {user['id']: user for user in user_data}
+        liked_users_data_dict = {user['id']: user for user in liked_users_data}
         profile_data_dict = {profile['user']: profile for profile in profile_data}
         profile_picture_data_dict = {picture['user']: picture for picture in profile_picture_data}
 
-        # Merge the data into a single list of dictionaries with user data, profile data, and profile picture data
+        # Merge the data into a single list of dictionaries
         merged_data = []
 
         for user_like in user_likes_data:
             user_id = user_like['user']
-            user_profile_data = user_data_dict.get(user_id)
-            profile_data_for_user = profile_data_dict.get(user_id)
-            profile_picture_data_for_user = profile_picture_data_dict.get(user_id)
+            liked_user_id = user_like['liked_user']
+            user_data_entry = user_data_dict.get(user_id)
+            liked_user_data_entry = liked_users_data_dict.get(liked_user_id)
+            profile_data_entry = profile_data_dict.get(user_id)
+            user_profile_picture_data_entry = profile_picture_data_dict.get(user_id)
+            liked_user_profile_picture_data_entry = profile_picture_data_dict.get(liked_user_id)
 
-            if user_profile_data:
-                # Merge user_like, user_profile_data, and profile_data dictionaries
-                merged_entry = {**user_like, 'user_data': user_profile_data}
+            if user_data_entry:
+                merged_entry = {**user_like, 'user_data': user_data_entry}
 
-                if profile_data_for_user:
-                    merged_entry['profile_data'] = profile_data_for_user
+                if liked_user_data_entry:
+                    merged_entry['liked_user_data'] = liked_user_data_entry
 
-                if profile_picture_data_for_user:
-                    merged_entry['profile_picture_data'] = profile_picture_data_for_user
+                if profile_data_entry:
+                    merged_entry['profile_data'] = profile_data_entry
+
+                if user_profile_picture_data_entry:
+                    merged_entry['user_profile_picture_data'] = user_profile_picture_data_entry
+
+                if liked_user_profile_picture_data_entry:
+                    merged_entry['liked_user_profile_picture_data'] = liked_user_profile_picture_data_entry
 
                 merged_data.append(merged_entry)
 
