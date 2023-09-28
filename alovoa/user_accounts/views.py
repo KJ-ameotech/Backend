@@ -654,11 +654,63 @@ class CustomUserList(APIView):
 
         return Response(user_data_with_images_and_profile)
 
-class UserLikeListViewRequestsAccepted(generics.ListAPIView):
-    serializer_class = UserLikeSerializer
 
-    def get_queryset(self):
-        user_id = self.kwargs['user_id']  # Assuming you pass the user_id in the URL
-        return UserLike.objects.filter(user_id=user_id, approved=True)
+class UserLikeListViewRequestsAccepted(APIView):
+    def get(self, request, user_id):
+        # Retrieve UserLike objects for the specified user_id with approved=True
+        user_likes = UserLike.objects.filter(user_id=user_id, approved=True)
+
+        # Extract user IDs from user_likes queryset
+        user_ids = [user_data.user.id for user_data in user_likes]
+
+        # Retrieve CustomUser objects for the user IDs and rename the variable to user_data
+        user_data = CustomUser.objects.filter(id__in=user_ids)
+
+        # Retrieve Profile objects for the user IDs and rename the variable to profile_data
+        profile_data = Profile.objects.filter(user_id__in=user_ids)
+
+        # Retrieve ProfilePicture objects for the user IDs
+        profile_picture_data = ProfilePicture.objects.filter(user_id__in=user_ids)
+
+        # Serialize the UserLike objects
+        user_likes_data = UserLikeSerializer(user_likes, many=True).data
+
+        # Serialize the CustomUser objects (now named user_data)
+        user_data = CustomUserSerializer(user_data, many=True).data
+
+        # Serialize the Profile objects (now named profile_data)
+        profile_data = ProfileSerializer(profile_data, many=True).data
+
+        # Serialize the ProfilePicture objects
+        profile_picture_data = ProfilePictureSerializer(profile_picture_data, many=True).data
+
+        # Create dictionaries to map user IDs to their corresponding user data, profile data, and profile picture data
+        user_data_dict = {user['id']: user for user in user_data}
+        profile_data_dict = {profile['user']: profile for profile in profile_data}
+        profile_picture_data_dict = {picture['user']: picture for picture in profile_picture_data}
+
+        # Merge the data into a single list of dictionaries with user data, profile data, and profile picture data
+        merged_data = []
+
+        for user_like in user_likes_data:
+            user_id = user_like['user']
+            user_profile_data = user_data_dict.get(user_id)
+            profile_data_for_user = profile_data_dict.get(user_id)
+            profile_picture_data_for_user = profile_picture_data_dict.get(user_id)
+
+            if user_profile_data:
+                # Merge user_like, user_profile_data, and profile_data dictionaries
+                merged_entry = {**user_like, 'user_data': user_profile_data}
+
+                if profile_data_for_user:
+                    merged_entry['profile_data'] = profile_data_for_user
+
+                if profile_picture_data_for_user:
+                    merged_entry['profile_picture_data'] = profile_picture_data_for_user
+
+                merged_data.append(merged_entry)
+
+        return Response(merged_data, status=status.HTTP_200_OK)
+
 
 
