@@ -1,11 +1,5 @@
 from django.urls import path
-from .views import (CustomUserRegistration, UserLogin,
-                    ProfileListCreateView,PreferenceListCreateView,
-                    PreferenceDetailView, UserLikeListCreateView,UploadedImagesListCreateView,
-                    SubscriptionListAPIView,SubscriptionDetailAPIView,CommunityList, CommunityDetail
-                    ,ReligionList,ReligionDetail,CommunityByReligionBy,StateList,StateDetail,
-                    DistrictList,DistrictDetail,DistrictsByState,CheckEmailExists,
-                    ChangePassword, CustomUserDetailView,UserLikeAPIView,UserLikeListViewRequestsAccepted,UserLikeCountAPIView,CustomUserList,CustomUserSearchAPIView, UserLikeDetailView,CustomUserUpdateView, UserProfilepictureDetailView,UserProfilepictureListCreateView,CustomUserDeleteView,ProfileRetrieveUpdateDestroyView)
+from .views import *
 
 
 
@@ -45,5 +39,6 @@ urlpatterns = [
     path('api/all-users/', CustomUserList.as_view(), name='all-users'),
     path('api/notification-count/', UserLikeCountAPIView.as_view(), name='count'),
     path('followed-users/<int:user_id>/', UserLikeListViewRequestsAccepted.as_view(), name='user-like-list'),
+    path('liked-users-likes/<int:liked_user_id>/', LikedUserLikeListViewRequestsAccepted.as_view(), name='liked-users-likes'),
 
 ]

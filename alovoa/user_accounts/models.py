@@ -34,6 +34,7 @@ class UserLike(models.Model):
     liked_user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='likes_received')
     timestamp = models.DateTimeField(auto_now_add=True)
     approved = models.BooleanField(default=False)
+    slug = models.CharField(max_length=1000, null=True, blank=True, unique=True)
 
     def __str__(self):
         return f'{self.user.username} likes {self.liked_user.username}'

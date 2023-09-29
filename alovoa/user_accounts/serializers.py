@@ -103,9 +103,6 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         model = Subscription
         fields = '__all__'
 
-
-
-
 class CommunitySerializer(serializers.ModelSerializer):
     class Meta:
         model = Community
