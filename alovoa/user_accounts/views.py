@@ -652,33 +652,22 @@ class CustomUserList(APIView):
 
 class UserLikeListViewRequestsAccepted(APIView):
     def get(self, request, user_id):
-        # Retrieve UserLike objects for the specified user_id with approved=True
         user_likes = UserLike.objects.filter(user_id=user_id, approved=True)
-        # Extract user IDs from user_likes queryset
         liked_user_ids = [user_like.liked_user.id for user_like in user_likes]
-        # Retrieve CustomUser objects for the specified user_id and liked user IDs
         user_data = CustomUser.objects.filter(id=user_id)
         liked_users_data = CustomUser.objects.filter(id__in=liked_user_ids)
-        # Retrieve Profile objects for both the specified user_id and liked user IDs
         profile_data = Profile.objects.filter(user_id__in=[user_id] + liked_user_ids)
-        # Retrieve ProfilePicture objects for both the specified user_id and liked user IDs
         profile_picture_data = ProfilePicture.objects.filter(user_id__in=[user_id] + liked_user_ids)
-        # Serialize the UserLike objects
         user_likes_data = UserLikeSerializer(user_likes, many=True).data
-        # Serialize the CustomUser objects for the specified user_id
         user_data = CustomUserSerializer(user_data, many=True).data
-        # Serialize the CustomUser objects for liked users
         liked_users_data = CustomUserSerializer(liked_users_data, many=True).data
-        # Serialize the Profile objects
         profile_data = ProfileSerializer(profile_data, many=True).data
-        # Serialize the ProfilePicture objects for both the specified user_id and liked user IDs
         profile_picture_data = ProfilePictureSerializer(profile_picture_data, many=True).data
-        # Create dictionaries to map user IDs to their corresponding data
         user_data_dict = {user['id']: user for user in user_data}
         liked_users_data_dict = {user['id']: user for user in liked_users_data}
         # profile_data_dict = {profile['user']: profile for profile in profile_data}
         profile_picture_data_dict = {picture['user']: picture for picture in profile_picture_data}
-        # Merge the data into a single list of dictionaries
+
         merged_data = []
 
         for user_like in user_likes_data:
@@ -712,67 +701,25 @@ class UserLikeListViewRequestsAccepted(APIView):
 
 class LikedUserLikeListViewRequestsAccepted(APIView):
     def get(self, request, liked_user_id):
-        # Retrieve UserLike objects where the specified user is liked (liked_user) with approved=True
         user_likes = UserLike.objects.filter(liked_user_id=liked_user_id, approved=True)
+        liked_user = UserLike.objects.filter(user=liked_user_id, approved=True)
 
-        # Extract user IDs who liked the specified user
         user_ids = [user_like.user.id for user_like in user_likes]
+        like_user_ids = [c_user.liked_user.id for c_user in liked_user]
 
-        # Retrieve CustomUser objects for the users who liked the specified user
+        user_ids = user_ids + like_user_ids
+
         user_data = CustomUser.objects.filter(id__in=user_ids)
 
-        # Retrieve Profile objects for both the specified liked_user_id and users who liked them
-        profile_data = Profile.objects.filter(user_id__in=[liked_user_id] + user_ids)
-
-        # Retrieve ProfilePicture objects for both the specified liked_user_id and users who liked them
-        profile_picture_data = ProfilePicture.objects.filter(user_id__in=[liked_user_id] + user_ids)
-
-        # Serialize the UserLike objects
-        user_likes_data = UserLikeSerializer(user_likes, many=True).data
-
-        # Serialize the CustomUser objects for users who liked the specified user
         user_data = CustomUserSerializer(user_data, many=True).data
 
-        # Serialize the Profile objects
-        profile_data = ProfileSerializer(profile_data, many=True).data
+        profile_images = ProfilePicture.objects.filter(user__id__in=user_ids)
+        profile_images_data = ProfilePictureSerializer(profile_images, many=True).data
 
-        # Serialize the ProfilePicture objects for both the specified liked_user_id and users who liked them
-        profile_picture_data = ProfilePictureSerializer(profile_picture_data, many=True).data
+        for user, profile_image_data in zip(user_data, profile_images_data):
+            user['profile_image'] = profile_image_data['image']
 
-
-        user_data_dict = {user['id']: user for user in user_data}
-        # profile_data_dict = {profile['user']: profile for profile in profile_data}
-        profile_picture_data_dict = {picture['user']: picture for picture in profile_picture_data}
-
-        merged_data = []
-
-        for user_like in user_likes_data:
-            user_id = user_like['user']
-            liked_user_id = user_like['liked_user']
-            user_data_entry = user_data_dict.get(user_id)
-            liked_user_data_entry = user_data_dict.get(liked_user_id)
-            # profile_data_entry = profile_data_dict.get(user_id)
-            user_profile_picture_data_entry = profile_picture_data_dict.get(user_id)
-            liked_user_profile_picture_data_entry = profile_picture_data_dict.get(liked_user_id)
-
-            if user_data_entry:
-                merged_entry = {**user_like, 'user_data': user_data_entry}
-
-                if liked_user_data_entry:
-                    merged_entry['liked_user_data'] = liked_user_data_entry
-
-                # if profile_data_entry:
-                #     merged_entry['profile_data'] = profile_data_entry
-
-                if user_profile_picture_data_entry:
-                    merged_entry['user_profile_picture_data'] = user_profile_picture_data_entry
-
-                if liked_user_profile_picture_data_entry:
-                    merged_entry['liked_user_profile_picture_data'] = liked_user_profile_picture_data_entry
-
-                merged_data.append(merged_entry)
-
-        return Response(merged_data, status=status.HTTP_200_OK)
+        return Response(user_data, status=status.HTTP_200_OK)
 
 
 
