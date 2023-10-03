@@ -495,7 +495,29 @@ class UserProfilepictureListCreateView(generics.ListCreateAPIView):
 class UserProfilepictureDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = ProfilePicture.objects.all()
     serializer_class = ProfilePictureSerializer
-    lookup_field = 'user_id'  
+    lookup_field = 'user_id'
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        data = serializer.data
+        data['status_code'] = status.HTTP_200_OK  # Include the status code in the response
+        return Response(data)
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            data = serializer.data
+            data['status_code'] = status.HTTP_200_OK  # Include the status code in the response
+            return Response(data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 class CheckEmailExists(APIView):
     def post(self, request):
@@ -699,11 +721,14 @@ class UserLikeListViewRequestsAccepted(APIView):
         return Response(merged_data, status=status.HTTP_200_OK)
 
 
+
 class LikedUserLikeListViewRequestsAccepted(APIView):
     def get(self, request, liked_user_id):
+        # Retrieve UserLike objects where the specified user is liked (liked_user) with approved=True
         user_likes = UserLike.objects.filter(liked_user_id=liked_user_id, approved=True)
-        liked_user = UserLike.objects.filter(user=liked_user_id, approved=True)
+        liked_user  = UserLike.objects.filter(user=liked_user_id, approved=True)
 
+        # Extract user IDs who liked the specified user
         user_ids = [user_like.user.id for user_like in user_likes]
         like_user_ids = [c_user.liked_user.id for c_user in liked_user]
 
@@ -717,7 +742,12 @@ class LikedUserLikeListViewRequestsAccepted(APIView):
         profile_images_data = ProfilePictureSerializer(profile_images, many=True).data
 
         for user, profile_image_data in zip(user_data, profile_images_data):
+            slugList = user_likes.filter(user = user['id'])
+            if not slugList:
+                slugList = liked_user.filter(liked_user = user['id'])
+
             user['profile_image'] = profile_image_data['image']
+            user['slug'] = slugList[0].slug
 
         return Response(user_data, status=status.HTTP_200_OK)
 

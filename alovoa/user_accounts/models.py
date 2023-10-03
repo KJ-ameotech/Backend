@@ -37,7 +37,7 @@ class UserLike(models.Model):
     slug = models.CharField(max_length=1000, null=True, blank=True, unique=True)
 
     def __str__(self):
-        return f'{self.user.username} likes {self.liked_user.username}'
+        return f'{self.user.id} likes {self.liked_user.id}'
 
 
 class Image(models.Model):
