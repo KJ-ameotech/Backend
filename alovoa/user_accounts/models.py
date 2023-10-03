@@ -60,7 +60,11 @@ class Profile(models.Model):
     education = models.CharField(max_length=255, null=True, blank=True)
     occupation = models.CharField(max_length=255, null=True, blank=True)
     income = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    family_status = models.CharField(max_length=255, null=True, blank=True)
+    alcohlic = models.CharField(max_length=255, null=True, blank=True)
+    smoker = models.BooleanField(default=False)
     hobbies = models.JSONField(null=True, blank=True)
+    skin_tone = models.CharField(max_length=155, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     
 
@@ -129,6 +133,8 @@ class District(models.Model):
 
     def __str__(self):
         return self.name
+
+
 
 
 

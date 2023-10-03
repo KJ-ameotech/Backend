@@ -40,5 +40,6 @@ urlpatterns = [
     path('api/notification-count/', UserLikeCountAPIView.as_view(), name='count'),
     path('followed-users/<int:user_id>/', UserLikeListViewRequestsAccepted.as_view(), name='user-like-list'),
     path('liked-users-likes/<int:liked_user_id>/', LikedUserLikeListViewRequestsAccepted.as_view(), name='liked-users-likes'),
+    path('api/profile/advanced/search/', ProfileSearchView.as_view(), name='profile-search'),
 
 ]

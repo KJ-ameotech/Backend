@@ -752,5 +752,46 @@ class LikedUserLikeListViewRequestsAccepted(APIView):
         return Response(user_data, status=status.HTTP_200_OK)
 
 
+class ProfileSearchView(APIView):
+    def get(self, request):
+        # Get query parameters
+        start_height = self.request.query_params.get('startheight')
+        end_height = self.request.query_params.get('endheight')
+        caste = self.request.query_params.get('caste')
+        marital_status = self.request.query_params.get('marital_status')
+        min_weight = self.request.query_params.get('minweight')
+        max_weight = self.request.query_params.get('maxweight')
+        min_income = self.request.query_params.get('minincome')
+        max_income = self.request.query_params.get('maxincome')
+        skin_tone = self.request.query_params.get('skin_tone')
 
+        # Build the query for filtering profiles
+        query_params = {}
+
+        if start_height and end_height:
+            query_params['height__gte'] = start_height
+            query_params['height__lte'] = end_height
+
+        if caste:
+            query_params['caste'] = caste
+
+        if marital_status:
+            query_params['marital_status'] = marital_status
+
+        if min_weight and max_weight:
+            query_params['weight__gte'] = min_weight
+            query_params['weight__lte'] = max_weight
+
+        if min_income and max_income:
+            query_params['income__gte'] = min_income
+            query_params['income__lte'] = max_income
+
+        if skin_tone:
+            query_params['skin_tone'] = skin_tone
+
+        # Execute the query and retrieve matching profiles
+        matching_profiles = Profile.objects.filter(**query_params)
+        serializer = ProfileSerializer(matching_profiles, many=True)
+
+        return Response({'results': serializer.data})
 
