@@ -187,11 +187,13 @@ class ProfileListCreateView(generics.ListCreateAPIView):
     queryset = Profile.objects.all()    
     serializer_class = ProfileSerializer
 
-    
-        
+
+
+
 class ProfileRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
+    lookup_field = 'user'
 
 class UploadedImagesListCreateView(generics.ListCreateAPIView):
     queryset = UploadedImages.objects.all()
