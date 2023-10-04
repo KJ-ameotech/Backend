@@ -846,9 +846,16 @@ class UserLikeRequestListView(generics.ListAPIView):
     serializer_class = UserLikeSerializer
 
     def get_queryset(self):
-        liked_user_id = self.kwargs['liked_user_id']
-        follow_request_users = UserLike.objects.filter(liked_user_id=liked_user_id, approved=False, display=True)
-        return follow_request_users
+        # Get the liked_user_id from the query string
+        liked_user_id = self.request.query_params.get('liked_user_id')
+
+        # Check if liked_user_id is present and valid
+        if liked_user_id:
+            follow_request_users = UserLike.objects.filter(liked_user_id=liked_user_id, approved=False, display=True)
+            return follow_request_users
+        else:
+            # Handle the case where liked_user_id is not provided in the query string
+            return UserLike.objects.none()
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -871,7 +878,6 @@ class UserLikeRequestListView(generics.ListAPIView):
                     **user_data_serializer.data,  # Include fields from user_data_serializer.data
                 },
             }
-
 
             response_data.append(response_item)
 

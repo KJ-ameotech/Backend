@@ -43,6 +43,6 @@ urlpatterns = [
     path('api/profile/advanced/search/', ProfileSearchView.as_view(), name='profile-search'),
     path('users/<int:pk>/patch', CustomUserUpdateAPIView.as_view(), name='customuser-update'),
     path('stripe/payment/', StripePaymentView.as_view(), name='stripe-payment'),
-    path('user-likerequest/<int:liked_user_id>/', UserLikeRequestListView.as_view(), name='user-like-list'),
+    path('user-likerequest/', UserLikeRequestListView.as_view(), name='user-like-list'),
 
 ]
