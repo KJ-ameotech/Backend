@@ -42,5 +42,6 @@ urlpatterns = [
     path('liked-users-likes/<int:liked_user_id>/', LikedUserLikeListViewRequestsAccepted.as_view(), name='liked-users-likes'),
     path('api/profile/advanced/search/', ProfileSearchView.as_view(), name='profile-search'),
     path('users/<int:pk>/patch', CustomUserUpdateAPIView.as_view(), name='customuser-update'),
+    path('stripe/payment/', StripePaymentView.as_view(), name='stripe-payment'),
 
 ]

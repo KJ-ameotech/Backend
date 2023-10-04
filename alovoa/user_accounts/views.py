@@ -20,6 +20,9 @@ from .serializers import (CustomUserSerializer, ProfileSerializer,
                           DistrictSerializer, ProfilePictureSerializer)
 import cv2
 from django.views.decorators.csrf import csrf_exempt
+import stripe
+from django.conf import settings
+
 class CustomUserRegistration(APIView):
     def post(self, request):
         email = request.data.get('email')
@@ -813,3 +816,27 @@ class CustomUserUpdateAPIView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+
+
+
+# ________________________________________________________________________________________________________________**************************************___________________________________________________________________________
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
+class StripePaymentView(APIView):
+    def post(self, request, *args, **kwargs):
+        try:
+            # Retrieve the amount from the request data or adapt as needed
+            amount = request.data.get('amount', 1000)  # Amount in cents (e.g., $10.00)
+            currency = 'usd'  # Change to your desired currency code
+
+            # Create a Stripe Payment Intent
+            intent = stripe.PaymentIntent.create(
+                amount=amount,
+                currency=currency
+            )
+
+            return Response({'client_secret': intent.client_secret}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
