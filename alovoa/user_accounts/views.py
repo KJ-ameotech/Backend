@@ -100,6 +100,7 @@ class UserLikeListCreateView(generics.ListCreateAPIView):
 class UserLikeDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = UserLike.objects.all()
     serializer_class = UserLikeSerializer
+    lookup_field = 'pk'
 
 
     def get(self, request, *args, **kwargs):
@@ -109,6 +110,7 @@ class UserLikeDetailView(generics.RetrieveUpdateDestroyAPIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         except UserLike.DoesNotExist:
             return Response({'error': 'UserLike does not exist.'}, status=status.HTTP_404_NOT_FOUND)
+    
 
 class UserLogin(APIView):
     def post(self, request):
@@ -189,9 +191,6 @@ class UserLogin(APIView):
 class ProfileListCreateView(generics.ListCreateAPIView):
     queryset = Profile.objects.all()    
     serializer_class = ProfileSerializer
-
-
-
 
 class ProfileRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Profile.objects.all()
@@ -873,9 +872,9 @@ class UserLikeRequestListView(generics.ListAPIView):
 
             response_item = {
                 'user_like': {
-                    **user_like_serializer.data,  # Include fields from user_like_serializer.data
                     'profile_picture_image': profile_picture_image,
                     **user_data_serializer.data,  # Include fields from user_data_serializer.data
+                    **user_like_serializer.data,  # Include fields from user_like_serializer.data
                 },
             }
 
