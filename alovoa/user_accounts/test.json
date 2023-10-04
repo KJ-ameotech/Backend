@@ -1,0 +1,30 @@
+
+{
+
+            "user_like": {
+                "id": 14,
+                "timestamp": "2023-10-02T11:31:38.366165Z",
+                "approved": false,
+                "slug": "uuuuuuuuuuuuuuuuuuuuu",
+                "display": true,
+                "user_data": {
+                    "id": 1,
+                    "first_name": "adfdfs",
+                    "last_name": "fdsfdsfd",
+                    "username": "dffdfd",
+                    "email": "sahildhiman98765@gmail.com",
+                    "profile_for": "myseld",
+                    "date_of_birth": "2023-09-14",
+                    "religion": "agdsg",
+                    "community": "sgfgfd",
+                    "living_in": "ffgffd",
+                    "mobile_number": "07018595304",
+                    "gender": "male"
+                },
+                "liked_user": 5,
+              "profile_picture_image": "/media/profile_pictures/photo-1542909168-82c3e7fdca5c_vH5m4GT.jpeg"
+            }
+
+
+
+}

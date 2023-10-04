@@ -840,3 +840,45 @@ class StripePaymentView(APIView):
 
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserLikeRequestListView(generics.ListAPIView):
+    serializer_class = UserLikeSerializer
+
+    def get_queryset(self):
+        liked_user_id = self.kwargs['liked_user_id']
+        follow_request_users = UserLike.objects.filter(liked_user_id=liked_user_id, approved=False, display=True)
+        return follow_request_users
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        response_data = []
+
+        for user_like in queryset:
+            user_id = user_like.user.id
+            user_data = CustomUser.objects.get(id=user_id)
+            user_profile_picture = ProfilePicture.objects.get(user=user_data)
+
+            user_data_serializer = CustomUserSerializer(user_data)  # Assuming you have a serializer for your user model
+            profile_picture_image = user_profile_picture.image.url if user_profile_picture.image else None
+
+            user_like_serializer = UserLikeSerializer(user_like)  # Assuming you have a serializer for your UserLike model
+
+            response_item = {
+                'user_like': {
+                    **user_like_serializer.data,  # Include fields from user_like_serializer.data
+                    'profile_picture_image': profile_picture_image,
+                    **user_data_serializer.data,  # Include fields from user_data_serializer.data
+                },
+            }
+
+
+            response_data.append(response_item)
+
+        return Response(response_data)
+
+
+
+
+
+
