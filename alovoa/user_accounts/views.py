@@ -797,3 +797,19 @@ class ProfileSearchView(APIView):
 
         return Response({'results': serializer.data})
 
+
+class CustomUserUpdateAPIView(APIView):
+    def patch(self, request, *args, **kwargs):
+        user_id = kwargs.get('pk')  # assuming you have a URL parameter for the user's ID
+        try:
+            user = CustomUser.objects.get(id=user_id)
+        except CustomUser.DoesNotExist:
+            return Response({"message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = CustomUserSerializer(user, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
