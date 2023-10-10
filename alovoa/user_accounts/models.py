@@ -40,7 +40,7 @@ class UserLike(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     approved = models.BooleanField(default=False)
     slug = models.CharField(max_length=1000, null=True, blank=True, unique=True)
-    display = models.BooleanField(default=True)
+    display = models.BooleanField(default=False)
 
     def __str__(self):
         return f'{self.user.id} likes {self.liked_user.id}'

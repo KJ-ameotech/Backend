@@ -59,6 +59,7 @@ class UserLikeSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserLike
         fields = '__all__'
+    display = serializers.BooleanField(default=True)
 
 
 class UploadedImagesSerializer(serializers.ModelSerializer):
