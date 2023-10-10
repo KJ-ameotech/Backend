@@ -10,6 +10,11 @@ class CustomUser(AbstractUser):
     living_in = models.CharField(max_length=255, null=True, blank=True)
     mobile_number = models.CharField(max_length=15, null=True, blank=True)
     gender = models.CharField(max_length=155, null=True, blank=True)
+    latitude = models.CharField(max_length=255, null=True, blank=True)
+    longitude = models.CharField(max_length=255, null=True, blank=True)
+
+
+
 
     def __str__(self):
         return self.username

@@ -19,9 +19,12 @@ from .serializers import (CustomUserSerializer, ProfileSerializer,
                           CommunitySerializer,ReligionSerializer,StateSerializer,
                           DistrictSerializer, ProfilePictureSerializer)
 import cv2
+from datetime import date
+from random import randint
 from django.views.decorators.csrf import csrf_exempt
 import stripe
 from django.conf import settings
+from geopy.distance import geodesic
 
 class CustomUserRegistration(APIView):
     def post(self, request):
@@ -77,8 +80,6 @@ class UserLikeListCreateView(generics.ListCreateAPIView):
     queryset = UserLike.objects.all()
     serializer_class = UserLikeSerializer
 
-
-
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -117,6 +118,10 @@ class UserLogin(APIView):
         email = request.data.get('email')
         username = request.data.get('username')
         password = request.data.get('password')
+        latitude = request.data.get('latitude')
+        longitude = request.data.get('longitude')
+        request.data.pop('latitude', None)
+        request.data.pop('longitude', None)
 
         if email is not None:
             try:
@@ -132,6 +137,10 @@ class UserLogin(APIView):
                 if user.check_password(password):
                     # Password matches, log the user in
                     login(request, user)
+
+                    user.latitude = latitude
+                    user.longitude = longitude
+                    user.save()
 
                     # Generate refresh and access tokens
                     refresh = RefreshToken.for_user(user)
@@ -169,6 +178,10 @@ class UserLogin(APIView):
                 # If authentication is successful, log the user in
                 login(request, user)
 
+                user.latitude = latitude
+                user.longitude = longitude
+                user.save()
+
                 # Generate refresh and access tokens
                 refresh = RefreshToken.for_user(user)
                 response_data = {
@@ -188,9 +201,105 @@ class UserLogin(APIView):
 
 
 
-class ProfileListCreateView(generics.ListCreateAPIView):
-    queryset = Profile.objects.all()    
-    serializer_class = ProfileSerializer
+class ProfileListCreateView(APIView):
+    def get(self, request):
+
+        user_id = request.query_params.get('user_id')
+
+        # Check if the user_id is provided and valid
+        if not user_id:
+            return Response({'detail': 'user_id query parameter is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            requesting_user = Profile.objects.get(user_id=user_id)
+        except Profile.DoesNotExist:
+            return Response({'detail': 'User with the provided user_id does not exist.'},
+                            status=status.HTTP_404_NOT_FOUND)
+
+        profiles = Profile.objects.all()
+        profile_data = []
+        latitude = CustomUser.objects.get(id=user_id)
+      
+
+        # Get the latitude and longitude of the requesting user (assuming it's available in the request)
+        requesting_user_latitude = latitude.latitude  # Example latitude within [-90, 90]
+        requesting_user_longitude = latitude.longitude
+
+        
+
+        for profile in profiles:
+            try:
+                profile_picture = ProfilePicture.objects.get(user=profile.user)
+                user_latitude = profile.user.latitude
+                user_longitude = profile.user.longitude
+                
+
+                # Calculate the distance using geopy.distance
+                distance = round(geodesic((requesting_user_latitude, requesting_user_longitude), (user_latitude, user_longitude)).kilometers)
+                if distance is None:
+                    distance = "Too far"
+                today = date.today()
+                age = today.year - profile.user.date_of_birth.year -((today.month, today.day) <
+                    (profile.user.date_of_birth.month, profile.user.date_of_birth.day))
+                profile_data.append({
+                    'user_id': profile.user.id,
+                    'first_name': profile.user.first_name,
+                    'last_name': profile.user.last_name,
+                    'username': profile.user.username,
+                    'age':age,
+                    'email': profile.user.email,
+                    'profile_picture': profile_picture.image.url,
+                    'distance': distance
+                    # Add other profile data fields here
+                })
+            except ProfilePicture.DoesNotExist:
+                # Handle the case where a user doesn't have a profile picture
+                profile_data.append({
+                    'user_id': profile.user.id,
+                    'first_name': profile.user.first_name,
+                    'last_name': profile.user.last_name,
+                    'username': profile.user.username,
+                    'email': profile.user.email,
+                    'profile_picture': None,
+                    'distance':  "Too far"
+                    # Add other profile data fields here
+                })
+
+        return Response(profile_data)
+
+    def post(self, request):
+        user = request.data.get('user')
+
+        # Check if a profile for the user already exists
+        existing_profile = Profile.objects.filter(user=user).first()
+        if existing_profile:
+            return Response({'detail': 'Profile already exists for this user.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Deserialize the request data using the ProfileSerializer
+        serializer = ProfileSerializer(data=request.data)
+
+        if serializer.is_valid():
+            # Create a new profile object with the validated data
+            profile = serializer.save()
+
+            # If a profile picture is included in the request, create it
+            profile_picture_data = request.data.get('profile_picture')
+            if profile_picture_data:
+                profile_picture_serializer = ProfilePictureSerializer(
+                    data={'user': profile.id, 'image': profile_picture_data}
+                )
+                if profile_picture_serializer.is_valid():
+                    profile_picture_serializer.save()
+                else:
+                    # Handle errors in the profile picture creation
+                    return Response(
+                        profile_picture_serializer.errors,
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ProfileRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Profile.objects.all()
@@ -759,6 +868,7 @@ class LikedUserLikeListViewRequestsAccepted(APIView):
 class ProfileSearchView(APIView):
     def get(self, request):
         # Get query parameters
+        user_id = request.query_params.get('user_id')
         start_height = self.request.query_params.get('startheight')
         end_height = self.request.query_params.get('endheight')
         caste = self.request.query_params.get('caste')
@@ -768,7 +878,14 @@ class ProfileSearchView(APIView):
         min_income = self.request.query_params.get('minincome')
         max_income = self.request.query_params.get('maxincome')
         skin_tone = self.request.query_params.get('skin_tone')
+        if not user_id:
+            return Response({'detail': 'user_id query parameter is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
+        try:
+            requesting_user = Profile.objects.get(user_id=user_id)
+        except Profile.DoesNotExist:
+            return Response({'detail': 'User with the provided user_id does not exist.'},
+                            status=status.HTTP_404_NOT_FOUND)
         # Build the query for filtering profiles
         query_params = {}
 
@@ -792,12 +909,53 @@ class ProfileSearchView(APIView):
 
         if skin_tone:
             query_params['skin_tone'] = skin_tone
+        profile_data = []
+        latitude = CustomUser.objects.get(id=user_id)
 
+        # Get the latitude and longitude of the requesting user (assuming it's available in the request)
+        requesting_user_latitude = latitude.latitude  # Example latitude within [-90, 90]
+        requesting_user_longitude = latitude.longitude
         # Execute the query and retrieve matching profiles
         matching_profiles = Profile.objects.filter(**query_params)
-        serializer = ProfileSerializer(matching_profiles, many=True)
+        for profile in matching_profiles:
+            try:
+                profile_picture = ProfilePicture.objects.get(user=profile.user)
+                user_latitude = profile.user.latitude
+                user_longitude = profile.user.longitude
 
-        return Response({'results': serializer.data})
+                # Calculate the distance using geopy.distance
+                distance = round(geodesic((requesting_user_latitude, requesting_user_longitude), (user_latitude, user_longitude)).kilometers)
+                if distance is None:
+                    distance = "Too far"
+                today = date.today()
+                age = today.year - profile.user.date_of_birth.year -((today.month, today.day) <
+                    (profile.user.date_of_birth.month, profile.user.date_of_birth.day))
+                profile_data.append({
+                    'user_id': profile.user.id,
+                    'first_name': profile.user.first_name,
+                    'last_name': profile.user.last_name,
+                    'username': profile.user.username,
+                    'age':age,
+                    'email': profile.user.email,
+                    'profile_picture': profile_picture.image.url,
+                    'distance': distance
+                    # Add other profile data fields here
+                })
+            except ProfilePicture.DoesNotExist:
+                # Handle the case where a user doesn't have a profile picture
+                profile_data.append({
+                    'user_id': profile.user.id,
+                    'first_name': profile.user.first_name,
+                    'last_name': profile.user.last_name,
+                    'username': profile.user.username,
+                    'email': profile.user.email,
+                    'profile_picture': None,
+                    'distance':"Too far"
+                    # Add other profile data fields here
+                })
+
+        return Response(profile_data)
+   
 
 
 class CustomUserUpdateAPIView(APIView):
@@ -827,17 +985,24 @@ class StripePaymentView(APIView):
         try:
             # Retrieve the amount from the request data or adapt as needed
             amount = request.data.get('amount', 1000)  # Amount in cents (e.g., $10.00)
-            currency = 'usd'  # Change to your desired currency code
 
+            payment = stripe.PaymentIntent.create(
+                amount = amount,
+                currency = request.data.get('currency'),
+                source = request.data.get('token')
+            )
+
+            print("Task", payment)
             # Create a Stripe Payment Intent
             intent = stripe.PaymentIntent.create(
                 amount=amount,
-                currency=currency
+                currency="USD"
             )
 
             return Response({'client_secret': intent.client_secret}, status=status.HTTP_200_OK)
 
         except Exception as e:
+            print("Error", e)
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
